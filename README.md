@@ -1,1 +1,1 @@
-# samrt-contract
+# smart-contract
