@@ -92,15 +92,29 @@ contract DeBounty {
     }
 
     function registerHunter(string memory _name) public onlyNewHunter {
+
+   
         hunters[msg.sender] = Hunter(_name, true);
     }
 
     function registerCompany(string memory _name, string memory _nftMetadata)
         public
         onlyNewCompany
+         returns(Company memory)
     {
         companies[msg.sender] = Company(_name, _nftMetadata, true);
+        return companies[msg.sender];
     }
+
+function getCompany() public  view  returns (Company  memory company) {
+    return companies[msg.sender];
+}
+
+function getHunter() public  view returns (Hunter  memory hunter) {
+    return hunters[msg.sender];
+}
+
+
 
     function postIssue(
         string memory title,
