@@ -8,6 +8,7 @@ contract DeBounty {
         uint256 id;
         address creator;
         address solver;
+        uint256 solutionID;
         string title;
         string description;
         string hash; //TODO what is role of hash here?
@@ -15,10 +16,24 @@ contract DeBounty {
         ISSUE_STATUS status;
     }
 
+    struct ProposedSolution {
+        uint256 id;
+        uint256 issueID;
+        address issueCreator;
+        address proposer;
+        PROPOSED_SOLUTION_STATUS status;
+    }
+
     enum ISSUE_STATUS {
         POSTED,
         SOLVED,
         CANCELLED
+    }
+
+    enum PROPOSED_SOLUTION_STATUS {
+        PROPOSED,
+        ACCEPTED,
+        REJECTED
     }
 
     struct Hunter {
@@ -34,7 +49,9 @@ contract DeBounty {
     }
 
     mapping(uint256 => Issue) public issues;
+    mapping(uint256 => ProposedSolution[]) proposedSolutions; // can map solutions with issue id
     uint256 public issueCount;
+    uint256 public proposedSolutionCount;
 
     mapping(address => Hunter) hunters;
     mapping(address => Company) companies;
@@ -88,8 +105,7 @@ contract DeBounty {
 
     fallback() external payable {}
 
-   receive() external payable {
-    }
+    receive() external payable {}
 
     function registerHunter(string memory _name) public onlyNewHunter {
         hunters[msg.sender] = Hunter(_name, true);
@@ -114,6 +130,7 @@ contract DeBounty {
             issueCount,
             msg.sender,
             address(0),
+            0,
             title,
             description,
             hash,
@@ -147,5 +164,28 @@ contract DeBounty {
             ""
         );
         require(success, "failed transacction");
+    }
+
+    function postSolutionProposal(uint256 _issueID)
+        public
+        onlyRegisteredHunter
+    {
+        require(
+            issues[_issueID].status == ISSUE_STATUS.POSTED,
+            "Can't post this solution proposal"
+        );
+
+        ProposedSolution[] storage proposed_solutions = proposedSolutions[
+            _issueID
+        ];
+        proposed_solutions.push(
+            ProposedSolution(
+                proposedSolutionCount,
+                _issueID,
+                issues[_issueID].creator,
+                msg.sender,
+                PROPOSED_SOLUTION_STATUS.PROPOSED
+            )
+        );
     }
 }
