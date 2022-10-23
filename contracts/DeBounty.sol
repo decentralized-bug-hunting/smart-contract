@@ -51,7 +51,7 @@ contract DeBounty {
     mapping(uint256 => Issue) public issues;
     mapping(uint256 => ProposedSolution[]) proposedSolutions; // can map solutions with issue id
     uint256 public issueCount;
-    uint256 public proposedSolutionCount;
+    uint256 public proposedSolutionCount; // TODO should proposed count be inside issue struct?
 
     mapping(address => Hunter) hunters;
     mapping(address => Company) companies;
@@ -108,29 +108,25 @@ contract DeBounty {
     receive() external payable {}
 
     function registerHunter(string memory _name) public onlyNewHunter {
-
-   
         hunters[msg.sender] = Hunter(_name, true);
     }
 
     function registerCompany(string memory _name, string memory _nftMetadata)
         public
         onlyNewCompany
-         returns(Company memory)
+        returns (Company memory)
     {
         companies[msg.sender] = Company(_name, _nftMetadata, true);
         return companies[msg.sender];
     }
 
-function getCompany() public  view  returns (Company  memory company) {
-    return companies[msg.sender];
-}
+    function getCompany() public view returns (Company memory company) {
+        return companies[msg.sender];
+    }
 
-function getHunter() public  view returns (Hunter  memory hunter) {
-    return hunters[msg.sender];
-}
-
-
+    function getHunter() public view returns (Hunter memory hunter) {
+        return hunters[msg.sender];
+    }
 
     function postIssue(
         string memory title,
@@ -169,7 +165,7 @@ function getHunter() public  view returns (Hunter  memory hunter) {
     //TODO how shall payment be done ?  either by directly sending hunter address or getting solver addess from issue struct
 
     function payHunter(address payable _hunterAddress, uint256 _issueId)
-        external
+        public
         payable
     {
         //TODO how to check if contract has enpugh funds or not
@@ -201,5 +197,33 @@ function getHunter() public  view returns (Hunter  memory hunter) {
                 PROPOSED_SOLUTION_STATUS.PROPOSED
             )
         );
+    }
+
+    // Issue poster/company can view all the proposed solutions  for given issue id
+    function getAllProposedSolution(uint256 _issueID)
+        public
+        view
+        onlyRegisteredCompany
+        returns (ProposedSolution[] memory)
+    {
+        require(
+            issues[_issueID].creator == msg.sender,
+            "You have no access to view proposed solutions"
+        );
+        return proposedSolutions[_issueID];
+    }
+
+    //company can accept any of proposed soln and finally pay hunters
+    function acceptProposedSolution(uint256 _proposedSolnID, uint256 _issueID)
+        external
+        onlyRegisteredCompany
+    {
+        address _hunterAddress = proposedSolutions[_issueID][_proposedSolnID]
+            .proposer;
+        issues[_issueID].status = ISSUE_STATUS.SOLVED;
+        issues[_issueID].solver = _hunterAddress;
+        proposedSolutions[_issueID][_proposedSolnID]
+            .status = PROPOSED_SOLUTION_STATUS.ACCEPTED;
+        payHunter(payable(_hunterAddress), _issueID);
     }
 }
