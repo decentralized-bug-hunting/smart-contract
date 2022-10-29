@@ -128,6 +128,23 @@ contract DeBounty {
         return hunters[msg.sender];
     }
 
+
+    function isHunterValid() public view returns (bool) {
+        if (hunters[msg.sender].isRegistered == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+        function isCompanyValid() public view returns (bool) {
+        if (companies[msg.sender].isRegistered == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     function postIssue(
         string memory title,
         string memory description,
