@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-contract DeBounty {
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+
+contract DeBounty is ERC721URIStorage {
     address public admin;
 
     struct Issue {
@@ -51,13 +53,21 @@ contract DeBounty {
     mapping(uint256 => ProposedSolution[]) proposedSolutions; // can map solutions with issue id
     uint256 public issueCount;
     uint256 public proposedSolutionCount;
+    uint256 tokenCount;
     mapping(address => Hunter) hunters;
     mapping(address => Company) companies;
 
-    constructor() {
+    constructor() ERC721("Bounty NFT", "NFT-BT") {
         admin = msg.sender;
         issueCount = 0;
         proposedSolutionCount = 0;
+        tokenCount = 0;
+    }
+
+    function makeAnNFT(address _address, string memory _metadata) internal {
+        _safeMint(_address, tokenCount);
+        _setTokenURI(tokenCount, _metadata);
+        tokenCount++;
     }
 
     modifier onlyNewHunter() {
@@ -220,6 +230,9 @@ contract DeBounty {
         external
         onlyRegisteredCompany
     {
+        address _companyAddress = proposedSolutions[_issueID][_proposedSolnID]
+            .issueCreator;
+        require(_companyAddress == msg.sender, "Not authorized to accept");
         address _hunterAddress = proposedSolutions[_issueID][_proposedSolnID]
             .proposer;
         issues[_issueID].status = ISSUE_STATUS.SOLVED;
@@ -227,5 +240,6 @@ contract DeBounty {
         proposedSolutions[_issueID][_proposedSolnID]
             .status = PROPOSED_SOLUTION_STATUS.ACCEPTED;
         payHunter(payable(_hunterAddress), _issueID);
+        makeAnNFT(_hunterAddress, companies[_companyAddress].nftMetadata);
     }
 }
