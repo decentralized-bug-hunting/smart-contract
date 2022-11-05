@@ -11,7 +11,7 @@ contract DeBounty {
         uint256 solutionID;
         string title;
         string description;
-        string hash; //TODO what is role of hash here?
+        string hash;
         uint256 reward;
         ISSUE_STATUS status;
     }
@@ -39,7 +39,6 @@ contract DeBounty {
     struct Hunter {
         string name;
         bool isRegistered;
-        //can add hunter points/rating later
     }
 
     struct Company {
@@ -51,16 +50,14 @@ contract DeBounty {
     mapping(uint256 => Issue) public issues;
     mapping(uint256 => ProposedSolution[]) proposedSolutions; // can map solutions with issue id
     uint256 public issueCount;
-    uint256 public proposedSolutionCount; // TODO should proposed count be inside issue struct?
-
+    uint256 public proposedSolutionCount;
     mapping(address => Hunter) hunters;
     mapping(address => Company) companies;
-
-    Issue[] issueList;
 
     constructor() {
         admin = msg.sender;
         issueCount = 0;
+        proposedSolutionCount = 0;
     }
 
     modifier onlyNewHunter() {
@@ -114,10 +111,8 @@ contract DeBounty {
     function registerCompany(string memory _name, string memory _nftMetadata)
         public
         onlyNewCompany
-        returns (Company memory)
     {
         companies[msg.sender] = Company(_name, _nftMetadata, true);
-        return companies[msg.sender];
     }
 
     function getCompany() public view returns (Company memory company) {
@@ -128,7 +123,6 @@ contract DeBounty {
         return hunters[msg.sender];
     }
 
-
     function isHunterValid() public view returns (bool) {
         if (hunters[msg.sender].isRegistered == true) {
             return true;
@@ -137,7 +131,7 @@ contract DeBounty {
         }
     }
 
-        function isCompanyValid() public view returns (bool) {
+    function isCompanyValid() public view returns (bool) {
         if (companies[msg.sender].isRegistered == true) {
             return true;
         } else {
@@ -150,7 +144,7 @@ contract DeBounty {
         string memory description,
         string memory hash,
         uint256 reward //in wei
-    ) public payable onlyRegisteredCompany returns (Issue memory) {
+    ) public payable onlyRegisteredCompany {
         require(msg.value >= reward, "Insufficient funds ");
 
         Issue memory newIssue = Issue(
@@ -165,32 +159,22 @@ contract DeBounty {
             ISSUE_STATUS.POSTED
         );
         issues[issueCount] = newIssue;
-        issueList.push(newIssue);
         issueCount++;
-        return newIssue;
     }
-
-    function getAllUnsolvedIssues()
-        public
-        view
-        onlyRegisteredHunter
-        returns (Issue[] memory)
-    {
-        return issueList;
-    }
-
-    //TODO how shall payment be done ?  either by directly sending hunter address or getting solver addess from issue struct
 
     function payHunter(address payable _hunterAddress, uint256 _issueId)
         public
         payable
     {
-        //TODO how to check if contract has enpugh funds or not
+        require(
+            address(this).balance > issues[_issueId].reward,
+            "Not enough funds"
+        );
 
         (bool success, ) = _hunterAddress.call{value: issues[_issueId].reward}(
             ""
         );
-        require(success, "failed transacction");
+        require(success, "failed transaction");
     }
 
     function postSolutionProposal(uint256 _issueID)
@@ -214,6 +198,7 @@ contract DeBounty {
                 PROPOSED_SOLUTION_STATUS.PROPOSED
             )
         );
+        proposedSolutionCount++;
     }
 
     // Issue poster/company can view all the proposed solutions  for given issue id
