@@ -67,12 +67,12 @@ contract DeBounty is ERC721URIStorage {
     // mapping Issue ID with Issue
     mapping(uint256 => Issue) public issues;
 
-    // mapping Solutions with Issue ID
-    mapping(uint256 => ProposedSolution[]) proposedSolutions;
+    // mapping Solutions ID with Solutions
+    mapping(uint256 => ProposedSolution) public proposedSolutions;
 
     // Main identifiers for issues, solutions and tokens
     uint256 public issueCount;
-    uint256 proposedSolutionCount;
+    uint256 public proposedSolutionCount;
     uint256 tokenCount;
 
     // mapping addresses with respective hunters and companies
@@ -234,50 +234,32 @@ contract DeBounty is ERC721URIStorage {
             "Can't post this solution proposal"
         );
 
-        ProposedSolution[] storage proposed_solutions = proposedSolutions[
-            _issueID
-        ];
-        proposed_solutions.push(
-            ProposedSolution(
-                proposedSolutionCount,
-                _issueID,
-                issues[_issueID].creator,
-                msg.sender,
-                _solutionDescription,
-                PROPOSED_SOLUTION_STATUS.PROPOSED
-            )
+        ProposedSolution memory newSolution = ProposedSolution(
+            proposedSolutionCount,
+            _issueID,
+            issues[_issueID].creator,
+            msg.sender,
+            _solutionDescription,
+            PROPOSED_SOLUTION_STATUS.PROPOSED
         );
+        proposedSolutions[proposedSolutionCount] = newSolution;
         proposedSolutionCount++;
     }
 
-    // Issue poster/company can view all the proposed solutions for given issue id
-    function getAllProposedSolution(uint256 _issueID)
-        public
-        view
-        onlyRegisteredCompany
-        returns (ProposedSolution[] memory)
-    {
-        require(
-            issues[_issueID].creator == msg.sender,
-            "You have no access to view proposed solutions"
-        );
-        return proposedSolutions[_issueID];
-    }
-
     //company can accept any of proposed soln and finally pay hunters and mint NFT
-    function acceptProposedSolution(uint256 _proposedSolnID, uint256 _issueID)
+    function acceptProposedSolution(uint256 _proposedSolnID)
         external
         onlyRegisteredCompany
     {
-        address _companyAddress = proposedSolutions[_issueID][_proposedSolnID]
+        address _companyAddress = proposedSolutions[_proposedSolnID]
             .issueCreator;
         require(_companyAddress == msg.sender, "Not authorized to accept");
-        address _hunterAddress = proposedSolutions[_issueID][_proposedSolnID]
-            .proposer;
+        address _hunterAddress = proposedSolutions[_proposedSolnID].proposer;
+        uint256 _issueID = proposedSolutions[_proposedSolnID].issueID;
         issues[_issueID].status = ISSUE_STATUS.SOLVED;
         issues[_issueID].solver = _hunterAddress;
-        proposedSolutions[_issueID][_proposedSolnID]
-            .status = PROPOSED_SOLUTION_STATUS.ACCEPTED;
+        proposedSolutions[_proposedSolnID].status = PROPOSED_SOLUTION_STATUS
+            .ACCEPTED;
         payHunter(payable(_hunterAddress), _issueID);
         makeAnNFT(_hunterAddress, companies[_companyAddress].nftMetadata);
     }
