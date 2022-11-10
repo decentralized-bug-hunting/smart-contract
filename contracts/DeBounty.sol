@@ -93,7 +93,7 @@ contract DeBounty is ERC721URIStorage {
     mapping(address => Company) companies;
 
     // NFT contract and state varibales initialized in constructor
-    constructor() ERC721("Bounty NFT", "NFT-BT") {
+    constructor() ERC721("NFT DeBounty", "NFT-BT") {
         admin = msg.sender;
         issueCount = 0;
         proposedSolutionCount = 0;
