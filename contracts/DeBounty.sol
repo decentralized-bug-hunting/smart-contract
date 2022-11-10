@@ -70,9 +70,6 @@ contract DeBounty is ERC721URIStorage {
     // mapping Solutions with Issue ID
     mapping(uint256 => ProposedSolution[]) proposedSolutions;
 
-    // mapping hunters address with their solutions proposed
-    mapping(address => ProposedSolution[]) myProposedSolutions;
-
     // Main identifiers for issues, solutions and tokens
     uint256 public issueCount;
     uint256 proposedSolutionCount;
@@ -240,23 +237,16 @@ contract DeBounty is ERC721URIStorage {
         ProposedSolution[] storage proposed_solutions = proposedSolutions[
             _issueID
         ];
-
-        ProposedSolution memory proSolution = ProposedSolution(
-            proposedSolutionCount,
-            _issueID,
-            issues[_issueID].creator,
-            msg.sender,
-            _solutionDescription,
-            PROPOSED_SOLUTION_STATUS.PROPOSED
+        proposed_solutions.push(
+            ProposedSolution(
+                proposedSolutionCount,
+                _issueID,
+                issues[_issueID].creator,
+                msg.sender,
+                _solutionDescription,
+                PROPOSED_SOLUTION_STATUS.PROPOSED
+            )
         );
-
-        proposed_solutions.push(proSolution);
-
-        ProposedSolution[] storage mySolutions = myProposedSolutions[
-            msg.sender
-        ];
-        mySolutions.push(proSolution);
-
         proposedSolutionCount++;
     }
 
@@ -272,16 +262,6 @@ contract DeBounty is ERC721URIStorage {
             "You have no access to view proposed solutions"
         );
         return proposedSolutions[_issueID];
-    }
-
-    // hunters can get their proposed solutions
-    function getMyProposedSolutions()
-        public
-        view
-        onlyRegisteredHunter
-        returns (ProposedSolution[] memory)
-    {
-        return myProposedSolutions[msg.sender];
     }
 
     //company can accept any of proposed soln and finally pay hunters and mint NFT
