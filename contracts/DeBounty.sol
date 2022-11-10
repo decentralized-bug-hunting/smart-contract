@@ -202,7 +202,7 @@ contract DeBounty is ERC721URIStorage {
             reward,
             ISSUE_STATUS.POSTED
         );
-        issues[issueCount] = newIssue;
+        issues.push(newIssue);
         issueCount++;
     }
 
@@ -242,7 +242,7 @@ contract DeBounty is ERC721URIStorage {
             _solutionDescription,
             PROPOSED_SOLUTION_STATUS.PROPOSED
         );
-        proposedSolutions[proposedSolutionCount] = newSolution;
+        proposedSolutions.push(newSolution);
         proposedSolutionCount++;
     }
 
