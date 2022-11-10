@@ -69,6 +69,20 @@ contract DeBounty is ERC721URIStorage {
     Issue[] public issues;
     ProposedSolution[] public proposedSolutions;
 
+    // Get all Issues
+    function getAllIssues() public view returns (Issue[] memory) {
+        return issues;
+    }
+
+    // Get all solutions proposed
+    function getAllProposedSolutions()
+        public
+        view
+        returns (ProposedSolution[] memory)
+    {
+        return proposedSolutions;
+    }
+
     // Main identifiers for issues, solutions and tokens
     uint256 public issueCount;
     uint256 public proposedSolutionCount;
