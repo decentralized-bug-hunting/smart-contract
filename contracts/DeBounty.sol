@@ -64,11 +64,9 @@ contract DeBounty is ERC721URIStorage {
         bool isRegistered;
     }
 
-    // mapping Issue ID with Issue
-    mapping(uint256 => Issue) public issues;
-
-    // mapping Solutions ID with Solutions
-    mapping(uint256 => ProposedSolution) public proposedSolutions;
+    // Array of issues and proposedSolutions
+    Issue[] public issues;
+    ProposedSolution[] public proposedSolutions;
 
     // Main identifiers for issues, solutions and tokens
     uint256 public issueCount;
@@ -248,7 +246,7 @@ contract DeBounty is ERC721URIStorage {
 
     //company can accept any of proposed soln and finally pay hunters and mint NFT
     function acceptProposedSolution(uint256 _proposedSolnID)
-        external
+        public
         onlyRegisteredCompany
     {
         address _companyAddress = proposedSolutions[_proposedSolnID]
