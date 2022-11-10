@@ -29,6 +29,7 @@ contract DeBounty is ERC721URIStorage {
         // Unique solution specification
         uint256 id;
         uint256 issueID;
+        ISSUE_STATUS issueStatus;
         address issueCreator;
         address proposer;
         // Solution Details
@@ -235,6 +236,7 @@ contract DeBounty is ERC721URIStorage {
         ProposedSolution memory newSolution = ProposedSolution(
             proposedSolutionCount,
             _issueID,
+            issues[_issueID].status,
             issues[_issueID].creator,
             msg.sender,
             _solutionDescription,
@@ -254,10 +256,15 @@ contract DeBounty is ERC721URIStorage {
         require(_companyAddress == msg.sender, "Not authorized to accept");
         address _hunterAddress = proposedSolutions[_proposedSolnID].proposer;
         uint256 _issueID = proposedSolutions[_proposedSolnID].issueID;
+        require(
+            issues[_issueID].status == ISSUE_STATUS.POSTED,
+            "Cannot accept solution for this issue"
+        );
         issues[_issueID].status = ISSUE_STATUS.SOLVED;
         issues[_issueID].solver = _hunterAddress;
         proposedSolutions[_proposedSolnID].status = PROPOSED_SOLUTION_STATUS
             .ACCEPTED;
+        proposedSolutions[_proposedSolnID].issueStatus = ISSUE_STATUS.SOLVED;
         payHunter(payable(_hunterAddress), _issueID);
         makeAnNFT(_hunterAddress, companies[_companyAddress].nftMetadata);
     }
